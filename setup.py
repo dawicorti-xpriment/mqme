@@ -27,7 +27,16 @@ class PathWalker(object):
 setup(
     name=settings.APP_NAME,
     version=settings.VERSION,
-    scripts=['MQME.py'],
+    scripts=[
+        bdist_esky.Executable(
+            'MQME.py',
+            icon=os.path.join(
+                settings.IMAGES_PATH,
+                'mqme.png'
+            ),
+            gui_only=True,
+        )
+    ],
     options={
         'bdist_esky': {
             'includes': [
