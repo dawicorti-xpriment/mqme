@@ -2,11 +2,16 @@ import sys
 import os
 import tempfile
 
-APP_PATH = os.path.join(os.path.dirname(__file__), 'src')
+if not hasattr(sys, 'frozen'):
+    APP_PATH = os.path.dirname(__file__)
+    sys.path.append(os.path.join(APP_PATH, 'src'))
+else:
+    APP_PATH = os.path.dirname(sys.executable)
+
 APP_NAME = 'MQME'
-VERSION = '0.1'
+VERSION = '0.8.1'
 IMAGES_PATH = os.path.abspath(os.path.join(
-    APP_PATH, '..', 'assets', 'images'
+    APP_PATH, 'assets', 'images'
 ))
 FULL_APP_NAME = '%s %s' % (APP_NAME, VERSION)
 CONFIG_FILE_PATH = os.path.join(os.path.expanduser('~'), '.mqmerc')
@@ -22,8 +27,6 @@ FIGHTENV_SCROLL_PERIODS = {
 }
 
 FIGHTENV_SCROLL_GAP = 0.02
-
-sys.path.append(APP_PATH)
 
 try:
     os.makedirs(TMP_PATH)
