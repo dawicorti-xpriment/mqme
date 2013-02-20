@@ -30,10 +30,6 @@ setup(
     scripts=[
         bdist_esky.Executable(
             'MQME.py',
-            icon=os.path.join(
-                settings.IMAGES_PATH,
-                'mqme.png'
-            ),
             gui_only=True,
         )
     ],
