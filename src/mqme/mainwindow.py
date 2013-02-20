@@ -5,6 +5,7 @@ import Queue
 import Image
 from PyQt4 import QtGui
 from PyQt4 import QtCore
+from xml.dom.minidom import parse
 
 import settings
 from mqme.menubar import MenuBar
@@ -181,46 +182,75 @@ class MainWindow(QtGui.QMainWindow):
             msg_box.setDefaultButton(QtGui.QMessageBox.Cancel)
             msg_box.exec_()
 
+    def export_physics(self, sps_obj, id, directory):
+        svg_path = os.path.join(directory, id + '.svg')
+        if os.path.exists(svg_path):
+            with open(svg_path) as raw_file:
+                dom = parse(raw_file)
+                root = dom.getElementsByTagName('svg')[0]
+                image = root.getElementsByTagName('image')[0]
+                width = float(image.getAttribute('width'))
+                height = float(image.getAttribute('height'))
+                x = float(image.getAttribute('x'))
+                y = float(image.getAttribute('y'))
+                for rect in root.getElementsByTagName('rect'):
+                    physics_type = rect.getAttribute('id').split('_')[0]
+                    if physics_type != 'platform':
+                        physics_type = 'ground'
+                    sps_obj['physics'][id].append({
+                        'x': (float(rect.getAttribute('x')) - x) / width,
+                        'y': (float(rect.getAttribute('y')) - y) / height,
+                        'width': float(rect.getAttribute('width')) / width,
+                        'height': float(rect.getAttribute('height')) / height,
+                        'type': physics_type
+                    })
+
     def export_fight_environments(self, directory):
         fightenv_directory = os.path.join(directory, 'fightenv')
         environments = self.config.current_file().get('fightenv', {})
-        layers = ('background3', 'background2', 'background1')
+        layers = ('background3', 'background2')
         for name, fight_env in environments.items():
+            sps_obj = {'backgrounds': [], 'physics': {}}
             max_width = 0
             max_height = 0
             images = {}
-            env_correct = True
-            for layer_name in layers:
-                if not layer_name in layers:
-                    env_correct = False
-                else:
-                    images[layer_name] = Image.open(
-                        self.config.current_file()['pathes'][
-                            fight_env[layer_name]
-                        ]
+            bg1_path = self.config.current_file()['pathes'][
+                fight_env['background1']
+            ]
+            bg1_key = os.path.basename(bg1_path).split('_')[0]
+            bg1_directory = os.path.dirname(bg1_path)
+            for image_name in os.listdir(bg1_directory):
+                if image_name.startswith(bg1_key) and image_name.endswith('.png'):
+                    image_id = image_name.split('_', 1)[1].split('.')[0]
+                    image_path = os.path.join(bg1_directory, image_name)
+                    sps_obj['physics'][name + '_' + image_id] = []
+                    self.export_physics(
+                        sps_obj, name + '_' + image_id, os.path.dirname(image_path)
                     )
-                    width, height = images[layer_name].size
-                    if width > max_width:
-                        max_width = width
-                    max_height += height
-            if env_correct:
-                sps_obj = {}
-                crop_y = 0
-                image = Image.new('RGBA', (max_width, max_height))
-                for layer_name in layers:
-                    width, height = images[layer_name].size
-                    sps_obj[layer_name] = {
-                        'crop_x': 0,
-                        'crop_y': crop_y,
-                        'crop_width': width,
-                        'crop_height': height
-                    }
-                    image.paste(images[layer_name], (0, crop_y))
-                    crop_y += height
-                base_path = os.path.join(fightenv_directory, name)
-                image.save(base_path + '.png')
-                with open(base_path + '.sps', 'w') as sps:
-                    sps.write(json.dumps(sps_obj))
+                    image = Image.open(image_path)    
+                    output_path = os.path.join(
+                        fightenv_directory,
+                        name + '_' + image_id + '.png'
+                    )
+                    image.save(output_path)
+                    sps_obj['backgrounds'].append('fightenv/' + name + '_' + image_id)
+            for layer_index in (2, 3):
+                image = Image.open(
+                    self.config.current_file()['pathes'][
+                        fight_env['background' + str(layer_index)]
+                    ]
+                )
+                output_path = os.path.join(
+                    fightenv_directory,
+                    name + '_bg' + str(layer_index) + '.png'
+                )
+                image.save(output_path)
+                sps_obj['backgrounds'].append(
+                    'fightenv/' + name + '_bg' + str(layer_index)
+                )
+            base_path = os.path.join(fightenv_directory, name)
+            with open(base_path + '.sps', 'w') as sps:
+                sps.write(json.dumps(sps_obj))
 
     def export_sprites(self, directory):
         sprites_directory = os.path.join(directory, 'sprites')

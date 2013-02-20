@@ -9,7 +9,7 @@ else:
     APP_PATH = os.path.dirname(sys.executable)
 
 APP_NAME = 'MQME'
-VERSION = '0.8.1'
+VERSION = '0.8.4'
 IMAGES_PATH = os.path.abspath(os.path.join(
     APP_PATH, 'assets', 'images'
 ))
