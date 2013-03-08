@@ -18,6 +18,7 @@ from mqme.spritesgenerator import SpritesGenerator
 from mqme.fightenvironmenteditor import FightEnvironmentEditor
 from mqme.config import Config
 
+
 class MainWindow(QtGui.QMainWindow):
 
     resources_directories = (
@@ -240,35 +241,27 @@ class MainWindow(QtGui.QMainWindow):
                     self.export_physics(
                         sps_obj, name + '_' + image_id, os.path.dirname(image_path)
                     )
-                    images = utils.get_cropped_images(image_path)
-                    for subindex in range(len(images)):
-                        image = images[subindex]
-                        output_path = os.path.join(
-                            fightenv_directory,
-                            name + '_' + image_id + '_' + str(subindex) + '.png'
-                        )
-                        image.save(output_path)
-                    sps_obj['backgrounds'].append({
-                        'path': 'fightenv/' + name + '_' + image_id,
-                        'count': len(images)
-                    })
+                    image = utils.get_resized_image(image_path)    
+                    output_path = os.path.join(
+                        fightenv_directory,
+                        name + '_' + image_id + '.png'
+                    )
+                    image.save(output_path)
+                    sps_obj['backgrounds'].append('fightenv/' + name + '_' + image_id)
             for layer_index in (2, 3):
-                images = utils.get_cropped_images(
+                image = utils.get_resized_image(
                     self.config.current_file()['pathes'][
                         fight_env['background' + str(layer_index)]
                     ]
                 )
-                for subindex in range(len(images)):
-                    image = images[subindex]
-                    output_path = os.path.join(
-                        fightenv_directory,
-                        name + '_bg' + str(layer_index) + '_' + str(subindex) + '.png'
-                    )
-                    image.save(output_path)
-                sps_obj['backgrounds'].append({
-                    'path': 'fightenv/' + name + '_bg' + str(layer_index),
-                    'count': len(images)
-                })
+                output_path = os.path.join(
+                    fightenv_directory,
+                    name + '_bg' + str(layer_index) + '.png'
+                )
+                image.save(output_path)
+                sps_obj['backgrounds'].append(
+                    'fightenv/' + name + '_bg' + str(layer_index)
+                )
             base_path = os.path.join(fightenv_directory, name)
             with open(base_path + '.sps', 'w') as sps:
                 sps.write(json.dumps(sps_obj))
