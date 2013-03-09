@@ -4,6 +4,7 @@ IMAGE_RATIO = 2
 MAX_WIDTH = 400
 
 def get_resized_image(path):
+    image = Image.open(path)
     width, height = image.size
     return image.resize((width / IMAGE_RATIO, height / IMAGE_RATIO), Image.ANTIALIAS)
 
