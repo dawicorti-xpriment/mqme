@@ -228,9 +228,11 @@ class AnimationArea(QtGui.QFrame):
     def remove_image(self, frame_image):
         frame_image.hide()
         index = 0
+
         for image_obj in self.current_conf[frame_image.frame_key()]:
-            if image_obj['id'] == frame_image.image_id():
-                self.current_conf[frame_image.frame_key()].pop(index)
+            if not 'type' in image_obj or image_obj['type'] != 'conf':
+                if image_obj['id'] == frame_image.image_id():
+                    self.current_conf[frame_image.frame_key()].pop(index)
             index += 1
 
     def on_new_picture(self):
